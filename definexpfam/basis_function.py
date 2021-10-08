@@ -438,6 +438,7 @@ class LogisticBasisFunction(BasisFunction):
         self.basisfunction_name = 'Logistic'
     
     def basisfunction_eval(self, new_data):
+        
         """
         Returns the evaluations of the Logistic basis function at new_data.
         The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1])
@@ -474,6 +475,7 @@ class LogisticBasisFunction(BasisFunction):
         return output.T
     
     def basisfunction_deriv1(self, new_data):
+        
         """
         Returns the evaluations of the first partial derivative of the Logistic basis function
         with respect to the second argument at new_data.
@@ -511,6 +513,7 @@ class LogisticBasisFunction(BasisFunction):
         return output.T
     
     def basisfunction_deriv2(self, new_data):
+        
         """
         Returns the evaluations of the second derivative of the Logistic basis function at new_data.
         The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1])
@@ -602,6 +605,7 @@ class TriweightBasisFunction(BasisFunction):
         self.basisfunction_name = 'Triweight'
     
     def basisfunction_eval(self, new_data):
+        
         """
         Returns the evaluations of the triweight basis function at new_data.
         The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
