@@ -57,9 +57,9 @@ def check_basedensity(base_density):
 def check_basisfunction(basis_function):
 
     """
-    Check the type of kernel_function.
+    Check the type of basis_function.
 
-    basis_function : kernel_function object
+    basis_function : basis_function object
         The basis function used to estimate the probability density function.
         __type__ must be 'basis_function'.
 
@@ -76,6 +76,26 @@ def check_basisfunction(basis_function):
         pass
 
 
+def check_basisfunction_name(basis_function):
+
+    """
+    Check the type of basis_function.
+
+    basis_function : kernel_function object
+        The basis function used to estimate the probability density function,
+        which must be one of 'Polynomial', 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', and 'Sigmoid'.
+
+    """
+
+    bf_name = basis_function.basisfunction_name
+    if bf_name not in ['Polynomial', 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', 'Sigmoid']:
+    
+        raise NotImplementedError(f"The basis function is {bf_name}, which has not been implemented.")
+    
+    else:
+
+        pass
+    
 # def check_samedata(kernel_function, base_density):
 #
 # 	"""
