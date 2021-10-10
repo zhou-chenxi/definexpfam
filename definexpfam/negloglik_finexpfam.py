@@ -573,3 +573,378 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
     coefficients = new_iter
 
     return coefficients
+
+
+def evaluate_negloglik_loss(data, new_data, basis_function, base_density, coef, batchmc_params,
+                            batch_mc=True, batch_mc_se=False):
+    """
+
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        The array of observations whose density function is to be estimated.
+
+    basis_function : basis_function object
+        The basis function used to estimate the probability density function.
+        __type__ must be 'basis_function'.
+
+    base_density : base_density object
+        The base density function used to estimate the probability density function.
+        __type__ must be 'base_density'.
+
+    coef :
+
+    batchmc_params : dict
+        The dictionary of parameters to control the batch Monte Carlo method
+        to approximate the log-partition function and its gradient.
+        Must be returned from the function batch_montecarlo_params.
+
+    batch_mc : bool, optional
+        Whether to use the batch Monte Carlo method with the termination criterion
+        being the relative difference of two consecutive approximations; default is True.
+
+    batch_mc_se : bool, optional
+        Whether to use the batch Monte Carlo method with the termination criterion
+        being the standard deviation of approximations; default is False.
+
+    print_error : bool, optional
+        Whether to print the error of the gradient descent algorithm at each iteration; default is True.
+
+    Returns
+    -------
+
+
+    """
+    
+    new_data = check_data_type(new_data)
+    new_data = check_data_dim(new_data)
+    n, d1 = new_data.shape
+    
+    data = check_data_type(data)
+    data = check_data_dim(data)
+    N, d = data.shape
+    
+    assert d == d1, "The dimensionality of data and new_data are not the same."
+    
+    # parameters associated with batch Monte Carlo estimation
+    mc_batch_size = batchmc_params["mc_batch_size"]
+    mc_tol = batchmc_params["mc_tol"]
+    
+    # compute A(coef)
+    if batch_mc:
+        
+        mc_output1 = negloglik_finexpfam_grad_logpar_batchmc(
+            data=data,
+            basis_function=basis_function,
+            base_density=base_density,
+            coef=coef,
+            batch_size=mc_batch_size,
+            tol_param=mc_tol,
+            normalizing_const_only=True,
+            print_error=False)
+    
+    elif batch_mc_se:
+        
+        mc_output1 = negloglik_finexpfam_grad_logpar_batchmc_se(
+            data=data,
+            basis_function=basis_function,
+            base_density=base_density,
+            coef=coef,
+            batch_size=mc_batch_size,
+            tol_param=mc_tol,
+            normalizing_const_only=True,
+            print_error=False)
+    
+    else:
+        
+        raise NotImplementedError(("In order to approximate the gradient of the log-partition function, "
+                                   "exactly one of 'batch_mc' and 'batch_mc_se' must be set True."))
+    
+    norm_const = mc_output1
+    Af = np.log(norm_const)
+    
+    # compute (1 / n) \sum_{j=1}^N \innerp{coef}{T(Y_j)}, where Y_j is the j-th row of new_data
+    basis_mat_new = basis_function.basisfunction_eval(new_data)
+    avg_fx = np.mean(np.matmul(basis_mat_new.T, coef))
+    
+    loss_val = Af - avg_fx
+    
+    return loss_val
+
+
+def negloglik_optparam(data, basis_function_name, base_density,
+                       param_cand, k_folds, print_error, optalgo_params,
+                       batchmc_params, save_dir=None, save_info=False,
+                       batch_mc=True, batch_mc_se=False):
+    """
+    Selects the optimal hyperparameter in the negative log-likelihood density estimation
+    using k-fold cross validation and computes the coefficient vector at this optimal penalty parameter.
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        The array of observations whose density function is to be estimated.
+
+
+
+
+
+
+
+
+    base_density : base_density object
+        The base density function used to estimate the probability density function.
+        __type__ must be 'base_density'.
+
+    param_cand : list or 1-dimensional numpy.ndarray
+        The list of hyperparameter candidates.
+
+    k_folds : int
+        The number of folds for cross validation.
+
+    print_error : bool
+        Whether to print the error of the gradient descent algorithm at each iteration.
+
+    optalgo_params : dict
+        The dictionary of parameters to control the gradient descent algorithm.
+        Must be returned from the function negloglik_penalized_optalgoparams.
+
+    batchmc_params : dict
+        The dictionary of parameters to control the batch Monte Carlo method
+        to approximate the log-partition function and its gradient.
+        Must be returned from the function batch_montecarlo_params.
+
+    save_dir : str, optional
+        The directory path to which the estimation information is saved;
+        only works when save_info is True; default is None.
+
+    save_info : bool, optional
+        Whether to save the estimation information, including the values of negative log-likelihood
+        loss function of each fold and the coefficient vector at the optimal penalty parameter, to a local file;
+        default is False.
+
+    batch_mc : bool, optional
+        Whether to use the batch Monte Carlo method with the termination criterion
+        being the relative difference of two consecutive approximations; default is True.
+
+    batch_mc_se : bool, optional
+        Whether to use the batch Monte Carlo method with the termination criterion
+        being the standard deviation of approximations; default is False.
+
+    Returns
+    -------
+    dict
+        A dictionary containing opt_param, the optimal hyperparameter, and
+        opt_coef, the coefficient vector at the optimal penalty parameter.
+
+    """
+    
+    check_basedensity(base_density)
+    
+    if basis_function_name not in ['Polynomial', 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', 'Sigmoid']:
+        raise NotImplementedError(f"The basis function is {basis_function_name}, which has not been implemented.")
+    
+    if len(data.shape) == 1:
+        data = data.reshape(-1, 1)
+    
+    data = check_data_type(data)
+    data = check_data_dim(data)
+    N, d = data.shape
+    
+    # check the validity of param_cand
+    if basis_function_name == 'Polynomial':
+        
+        param_cand_int = np.array(param_cand).flatten()
+        if param_cand_int.dtype != int:
+            raise ValueError("For the polynomial basis function, the param_cand should only contain integers.")
+        if np.any(param_cand_int < 0):
+            raise ValueError("There exists at least one element in param_cand whose value is negative. Please modify.")
+    
+    else:
+        
+        param_cand = np.array(param_cand).flatten()
+        if np.any(param_cand < 0.):
+            raise ValueError("There exists at least one element in param_cand whose value is negative. Please modify.")
+    
+    n_param = len(param_cand)
+    
+    # check the step size
+    step_size = optalgo_params['step_size']
+    if isinstance(step_size, float):
+        
+        warn_msg = ("The step_size in optalgo_params is a float, and will be used in computing "
+                    "density estimates for all {} different hyperparameter values in param_cand."
+                    "It is better to supply a list or numpy.ndarray for step_size.").format(n_param)
+        
+        print(warn_msg)
+        
+        step_size = np.array([step_size] * n_param)
+    
+    elif isinstance(step_size, list):
+        
+        step_size = np.array(step_size)
+    
+    if len(step_size) != n_param:
+        raise ValueError("The length of step_size in optalgo_params is not the same as that of param_cand.")
+    
+    folds_i = np.random.randint(low=0, high=k_folds, size=N)
+    
+    nll_scores = np.zeros((n_param,), dtype=np.float64)
+    
+    if save_info:
+        f_log = open('%s/log.txt' % save_dir, 'w')
+    
+    for j in range(n_param):
+        
+        # initialize the loss score
+        score = 0.
+        current_param = param_cand[j]
+        
+        print("Parameter value " + str(j) + ": " + str(current_param))
+        
+        if save_info:
+            f_log.write('parameter: %.8f, ' % current_param)
+        
+        for i in range(k_folds):
+            # data split
+            train_data = data[folds_i != i,]
+            test_data = data[folds_i == i,]
+            
+            if basis_function_name == 'Polynomial':
+                
+                basis_function_sub = PolynomialBasisFunction(
+                    landmarks=train_data,
+                    degree=current_param)
+            
+            elif basis_function_name == 'Gaussian':
+                
+                basis_function_sub = GaussianBasisFunction(
+                    landmarks=train_data,
+                    bw=current_param)
+            
+            elif basis_function_name == 'RationalQuadratic':
+                
+                basis_function_sub = RationalQuadraticBasisFunction(
+                    landmarks=train_data,
+                    bw=current_param)
+            
+            elif basis_function_name == 'Logistic':
+                
+                basis_function_sub = LogisticBasisFunction(
+                    landmarks=train_data,
+                    bw=current_param)
+            
+            elif basis_function_name == 'Triweight':
+                
+                basis_function_sub = TriweightBasisFunction(
+                    landmarks=train_data,
+                    bw=current_param)
+            
+            elif basis_function_name == 'Sigmoid':
+                
+                basis_function_sub = SigmoidBasisFunction(
+                    landmarks=train_data,
+                    bw=current_param)
+            
+            # compute the coefficient vector for the given hyperparameter
+            train_algo_control = negloglik_optalgoparams(
+                start_pt=np.zeros((train_data.shape[0], 1), dtype=np.float64),
+                step_size=float(step_size[j]),
+                max_iter=optalgo_params["max_iter"],
+                rel_tol=optalgo_params["rel_tol"])
+            
+            coef = negloglik_finexpfam_coef(
+                data=train_data,
+                basis_function=basis_function_sub,
+                base_density=base_density,
+                optalgo_params=train_algo_control,
+                batchmc_params=batchmc_params,
+                batch_mc=batch_mc,
+                batch_mc_se=batch_mc_se,
+                print_error=True)
+            
+            score += evaluate_negloglik_loss(
+                data=train_data,
+                new_data=test_data,
+                basis_function=basis_function_sub,
+                base_density=base_density,
+                coef=coef,
+                batchmc_params=batchmc_params,
+                batch_mc=batch_mc, batch_mc_se=batch_mc_se)
+        
+        nll_scores[j,] = score / k_folds
+        if save_info:
+            f_log.write('score: %.8f\n' % nll_scores[j,])
+    
+    if save_info:
+        f_log.close()
+    
+    cv_result = {np.round(x, 5): np.round(y, 10) for x, y in zip(param_cand, nll_scores)}
+    print("The cross validation scores are:\n" + str(cv_result))
+    
+    # find the optimal hyperparameter
+    opt_param = param_cand[np.argmin(nll_scores)]
+    print("=" * 50)
+    print("The optimal hyperparameter is {}.".format(opt_param))
+    print("=" * 50 + "\nFinal run with the optimal hyperparameter.")
+    
+    # compute the coefficient vector at the optimal hyperparameter
+    optalgo_params['step_size'] = float(step_size[np.argmin(nll_scores)])
+    
+    # form the basis function
+    if basis_function_name == 'Polynomial':
+        
+        basis_function = PolynomialBasisFunction(
+            landmarks=data,
+            degree=opt_param)
+    
+    elif basis_function_name == 'Gaussian':
+        
+        basis_function = GaussianBasisFunction(
+            landmarks=data,
+            bw=opt_param)
+    
+    elif basis_function_name == 'RationalQuadratic':
+        
+        basis_function = RationalQuadraticBasisFunction(
+            landmarks=data,
+            bw=opt_param)
+    
+    elif basis_function_name == 'Logistic':
+        
+        basis_function = LogisticBasisFunction(
+            landmarks=data,
+            bw=opt_param)
+    
+    elif basis_function_name == 'Triweight':
+        
+        basis_function = TriweightBasisFunction(
+            landmarks=data,
+            bw=opt_param)
+    
+    elif basis_function_name == 'Sigmoid':
+        
+        basis_function = SigmoidBasisFunction(
+            landmarks=data,
+            bw=opt_param)
+    
+    opt_coef = negloglik_finexpfam_coef(
+        data=data,
+        basis_function=basis_function,
+        base_density=base_density,
+        optalgo_params=optalgo_params,
+        batchmc_params=batchmc_params,
+        batch_mc=batch_mc,
+        batch_mc_se=batch_mc_se,
+        print_error=True)
+    
+    if save_info:
+        f_optcoef = open('%s/negloglik_optcoef.npy' % save_dir, 'wb')
+        np.save(f_optcoef, opt_coef)
+        f_optcoef.close()
+    
+    output = {"opt_param": opt_param,
+              "opt_coef": opt_coef}
+    
+    return output
