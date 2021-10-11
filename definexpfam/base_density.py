@@ -8,7 +8,7 @@ class Baseden:
     A parent class for the base density.
     
     __type__
-        Set __type__ to be the base density.
+        Set __type__ to be 'base_density'.
     
     """
     
@@ -18,6 +18,14 @@ class Baseden:
     
     @staticmethod
     def __type__():
+        
+        """
+        
+        Returns
+        -------
+        str :
+            'base_density'.
+        """
         
         return 'base_density'
     
@@ -47,7 +55,7 @@ class BasedenUniform(Baseden):
     Methods
     -------
     sample(n_samples)
-        Draws samples from uniform base distribution of sample size n_samples.
+        Draws random samples from uniform base distribution of size n_samples.
 
     baseden_eval(new_data)
         Evaluates the uniform base density function at new_data.
@@ -69,6 +77,7 @@ class BasedenUniform(Baseden):
     """
 
     def __init__(self, data, domain=None):
+        
         """
         Parameters
         ----------
@@ -130,7 +139,7 @@ class BasedenUniform(Baseden):
     def sample(self, n_samples):
 
         """
-        Draws samples from the uniform distribution of sample size n_samples.
+        Draws random samples from the uniform distribution of size n_samples.
 
         Parameters
         ----------
@@ -334,7 +343,7 @@ class BasedenExp(Baseden):
     Methods
     -------
     sample(n_samples)
-        Draws samples from the exponential base distribution of sample size n_samples.
+        Draws random samples from the exponential base distribution of size n_samples.
 
     baseden_eval(new_data)
         Evaluates the exponential base density function at new_data.
@@ -352,7 +361,7 @@ class BasedenExp(Baseden):
 
     """
 
-    def __init__(self, data, scale):
+    def __init__(self, data, scale=None):
 
         """
         Parameters
@@ -360,7 +369,7 @@ class BasedenExp(Baseden):
         data : numpy.ndarray
             The array of observations whose density function is to be estimated.
 
-        scale : float
+        scale : float, optional
             The scale parameter in the exponential distribution. Must be strictly positive. Default is None,
             under which condition the scale parameter is estimated using the method of maximum likelihood.
             
@@ -374,11 +383,11 @@ class BasedenExp(Baseden):
             raise ValueError("Data contain negative values. Exponential base density function cannot be used.")
         if len(data.shape) != 1 and data.shape[1] != 1:
             raise ValueError("The data must be 1-dimensional. ")
-        if scale <= 0:
-            raise ValueError("The scale parameter must be strictly positive.")
-
         if scale is not None:
-            self.scale = scale
+            if scale <= 0:
+                raise ValueError("The scale parameter must be strictly positive.")
+            else:
+                self.scale = scale
         else:
             self.scale = np.mean(data)
 
@@ -388,7 +397,7 @@ class BasedenExp(Baseden):
     def sample(self, n_samples):
 
         """
-        Draws samples from the exponential distribution of sample size n_samples.
+        Draws random samples from the exponential distribution of size n_samples.
 
         Parameters
         ----------
@@ -569,7 +578,7 @@ class BasedenGamma(Baseden):
     Methods
     -------
     sample(n_samples)
-        Draws samples from the gamma base distribution of sample size n_samples.
+        Draws random samples from the gamma base distribution of size n_samples.
 
     baseden_eval(new_data)
         Evaluates the gamma base density function at new_data.
@@ -645,7 +654,7 @@ class BasedenGamma(Baseden):
     def sample(self, n_samples):
 
         """
-        Draws samples from the gamma distribution of sample size n_samples.
+        Draws random samples from the gamma distribution of size n_samples.
 
         Parameters
         ----------
@@ -820,7 +829,7 @@ class BasedenNormal(Baseden):
     Methods
     -------
     sample(n_samples)
-        Draws samples from the multivariate normal base distribution of sample size n_samples.
+        Draws random samples from the multivariate normal base distribution of size n_samples.
 
     baseden_eval(new_data)
         Evaluates the multivariate normal base density function at new_data.
@@ -882,7 +891,7 @@ class BasedenNormal(Baseden):
     def sample(self, n_samples):
 
         """
-        Draws samples from the multivariate normal distribution of sample size n_samples.
+        Draws random samples from the multivariate normal distribution of size n_samples.
 
         Parameters
         ----------
@@ -996,17 +1005,17 @@ class BasedenNormal(Baseden):
     def baseden_eval_1d(self, x):
 
         """
-        Evaluates the normal base density function at a 1-dimensional data point x.
+        Evaluates the univariate normal base density function at a 1-dimensional data point x.
 
         Parameters
         ----------
         x : float
-            A floating point number at which the normal base density function is to be evaluated.
+            A floating point number at which the univariate normal base density function is to be evaluated.
 
         Returns
         -------
         float
-            A floating point number of the normal base density value at x.
+            A floating point number of the univariate normal base density value at x.
             
         """
 
@@ -1024,19 +1033,19 @@ class BasedenNormal(Baseden):
     def baseden_eval_2d(self, x0, x1):
 
         """
-        Evaluates the 2-dimensional normal base density function at a 2-dimensional data point (x0, x1),
+        Evaluates the bivariate normal base density function at a 2-dimensional data point (x0, x1),
         where x0 and x1 are the two coordinates, respectively.
 
         Parameters
         ----------
         x0, x1 : float
             Two floating point numbers forming the coordinates of a 2-dimensional data point at which
-            the 2-dimensional normal base density function is to be evaluated.
+            the bivariate normal base density function is to be evaluated.
             
         Returns
         -------
         float
-            A floating point number of the 2-dimensional normal base density value at (x0, x1).
+            A floating point number of the bivariate normal base density value at (x0, x1).
             
         """
 
@@ -1121,7 +1130,7 @@ class BasedenLognormal(Baseden):
     Methods
     -------
     sample(n_samples)
-        Draws samples from the log-normal base distribution of sample size n_samples.
+        Draws random samples from the log-normal base distribution of size n_samples.
 
     baseden_eval(new_data)
         Evaluates the log-normal base density function at new_data.
@@ -1169,7 +1178,7 @@ class BasedenLognormal(Baseden):
     def sample(self, n_samples):
 
         """
-        Draws samples from the log-normal distribution of sample size n_samples.
+        Draws random samples from the log-normal distribution of size n_samples.
 
         Parameters
         ----------
