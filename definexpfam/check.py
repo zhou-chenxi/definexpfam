@@ -3,6 +3,17 @@ import numpy as np
 def check_data_type(data):
     
     """
+    Check whether data is a numpy.ndarray. If not, convert it to a numpy.ndarray.
+    
+    Parameters
+    ----------
+    data :
+        The data whose type is to be checked and/or converted.
+        
+    Returns
+    -------
+    numpy.ndarray
+        data in the type of numpy.ndarray.
 
     """
     
@@ -15,7 +26,18 @@ def check_data_type(data):
 def check_data_dim(data):
     
     """
-
+    Check the dimensionality of data. If not, convert it to a numpy.ndarray.
+    
+    Parameters
+    ----------
+    data :
+        The data whose dimensionality is to be checked and/or converted.
+        
+    Returns
+    -------
+    numpy.ndarray
+        data in the matrix form of 1 column.
+    
     """
     
     dshape = data.shape
@@ -36,10 +58,12 @@ def check_basedensity(base_density):
 
     """
     Check the type of base_density.
-
+    
+    Parameters
+    ----------
     base_density : base_density object
         The base density function used to estimate the probability density function.
-        __type__ must be 'base_density'.
+        __type__ must be 'base_density'. If not, raise the TypeError and terminate the program.
 
     """
 
@@ -59,9 +83,11 @@ def check_basisfunction(basis_function):
     """
     Check the type of basis_function.
 
+    Parameters
+    ----------
     basis_function : basis_function object
         The basis function used to estimate the probability density function.
-        __type__ must be 'basis_function'.
+        __type__ must be 'basis_function'. If not, raise the TypeError and terminate the program.
 
     """
 
@@ -81,9 +107,12 @@ def check_basisfunction_name(basis_function):
     """
     Check the type of basis_function.
 
-    basis_function : kernel_function object
+    Parameters
+    ----------
+    basis_function : basis_function object
         The basis function used to estimate the probability density function,
         which must be one of 'Polynomial', 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', and 'Sigmoid'.
+        If not, raise the NotImplementedError and terminate the program.
 
     """
 
