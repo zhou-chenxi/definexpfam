@@ -22,7 +22,6 @@ class Baseden:
     def __type__():
         
         """
-        
         Returns
         -------
         str :
