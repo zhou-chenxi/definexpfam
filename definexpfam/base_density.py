@@ -7,6 +7,8 @@ class Baseden:
     """
     A parent class for the base density.
     
+    Methods
+    -------
     __type__
         Set __type__ to be 'base_density'.
     
