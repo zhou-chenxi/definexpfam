@@ -45,10 +45,10 @@ class BasedenUniform(Baseden):
         
     domain : numpy.ndarray
         A d by 2 array to represent the domain of the uniform base density function, where d is the
-        dimensionality of data. The j-th element is an array of the minimum and
+        dimensionality of data. The j-th element in domain is an array containing the minimum and
         the maximum of each dimension, for j = 0, ..., d-1.
-        For example, if domain = [[0., 1.], [3., 4.]], there are two dimensions,
-        and the first dimension is from 0. to 1., and the second dimension is from 3. to 4.
+        For example, if domain = [[0., 1.], [2., 3.]], there are two dimensions,
+        and the first dimension is from 0. to 1., and the second dimension is from 2. to 3.
         
     dim : int
         The dimensionality of data and the underlying uniform base density function, that is, d.
@@ -102,10 +102,12 @@ class BasedenUniform(Baseden):
             data = data.reshape(-1, 1)
 
         if domain is None:
+            
             # if the domain is not supplied
             domain_min = data.min(axis=0)
             domain_max = data.max(axis=0)
             domain = np.array([domain_min, domain_max]).T
+            
         else:
 
             if not isinstance(domain, np.ndarray):
@@ -123,9 +125,8 @@ class BasedenUniform(Baseden):
             if domain.shape[0] != data.shape[1]:
                 # check domain nrow == data ncol
                 raise ValueError(("There are {domain_coor} coordinates in domain, but {data_coor} "
-                                  "coordinates in data.").format(
-                    domain_coor=domain.shape[0],
-                    data_coor=data.shape[1]))
+                                  "coordinates in data.").format(domain_coor=domain.shape[0],
+                                                                 data_coor=data.shape[1]))
 
             # check that the data are within the domain specified
             d_min = np.min(data, axis=0, keepdims=True)
@@ -154,7 +155,7 @@ class BasedenUniform(Baseden):
             
         """
 
-        output = np.zeros((n_samples, self.dim), dtype=np.float32)
+        output = np.zeros((n_samples, self.dim), dtype=np.float64)
 
         for i in range(self.dim):
             output[:, i] = np.random.uniform(low=self.domain[i][0],
@@ -204,6 +205,7 @@ class BasedenUniform(Baseden):
         new_data : numpy.ndarray
             The new data at which the first partial derivative of the logarithm of the uniform base density function
             is to be evaluated.
+            
         j : int
             The coordinate with respect to which the first partial derivative is taken. It should be between 0
             and self.dim-1.
@@ -336,7 +338,7 @@ class BasedenExp(Baseden):
         The scale parameter in the exponential distribution.
         
     domain : numpy.ndarray
-        The list [[0., np.inf]] to represent the domain of the exponential base density function.
+        The domain of the exponential base density function, that is, [[0., np.inf]].
         
     dim : int
         The dimensionality of data and the underlying exponential base density function, that is, 1.
@@ -520,7 +522,7 @@ class BasedenExp(Baseden):
             raise ValueError(("Since the exponential base density function is defined on positive real numbers,"
                               " the value of j should be 0."))
 
-        output = np.zeros((new_data.shape[0], 1), dtype=np.float32)
+        output = np.zeros((new_data.shape[0], 1), dtype=np.float64)
 
         return output
 
@@ -571,7 +573,7 @@ class BasedenGamma(Baseden):
         The scale parameter in the gamma distribution.
         
     domain : numpy.ndarray
-        The list [[0., np.inf]] to represent the domain of the gamma base density function.
+        The domain of the gamma base density function, that is, [[0., np.inf]].
         
     dim : int
         The dimensionality of data and the underlying gamma base density function, that is, 1.
@@ -707,6 +709,7 @@ class BasedenGamma(Baseden):
         new_data : numpy.ndarray
             The new data at which the first derivative of the logarithm of the gamma base density function
             is to be evaluated.
+            
         j : int
             The coordinate with respect to which the first derivative is taken. Default is 0 and
             it should always be 0.
@@ -747,6 +750,7 @@ class BasedenGamma(Baseden):
         new_data : numpy.ndarray
             The new data at which the second derivative of the logarithm of the gamma base density function
             is to be evaluated.
+            
         j : int
             The coordinate with respect to which the second derivative is taken. Default is 0 and
             it should always be 0.
@@ -801,7 +805,8 @@ class BasedenGamma(Baseden):
 class BasedenNormal(Baseden):
 
     """
-    A class for the multivariate normal base density function.
+    A class for the multivariate normal base density function whose covariance matrix is
+    proportional to an identity matrix.
 
     ...
 
@@ -811,14 +816,14 @@ class BasedenNormal(Baseden):
         The array of observations whose density function is to be estimated.
         
     mean : numpy.ndarry
-        The mean vector of the multivariate normal base density function.
+        The mean vector in the multivariate normal base density function.
         
     base_sd : float
-        The standard deviation of the multivariate normal base density function.
+        The standard deviation in the multivariate normal base density function.
         
     covmat : numpy.ndarray
-        The covariance matrix of the multivariate normal base density function;
-        the covariance matrix is base_sd ** 2 times an identity matrix.
+        The covariance matrix in the multivariate normal base density function, and
+        is equal to base_sd ** 2 times an identity matrix.
         
     domain : numpy.ndarray
         A d by 2 array to represent the domain of the normal base density function
@@ -850,6 +855,10 @@ class BasedenNormal(Baseden):
         Evaluates the multivariate normal base density function at a 2-dimensional data point (x0, x1),
         where x0 and x1 are the two coordinates, respectively.
         
+    baseden_eval_3d(x0, x1, x2)
+        Evaluates the multivariate normal base density function at a 3-dimensional data point (x0, x1, x2),
+        where x0, x1 and x2 are the three coordinates, respectively.
+    
     """
 
     def __init__(self, data, mean, base_sd):
@@ -864,8 +873,8 @@ class BasedenNormal(Baseden):
             The mean vector of length data.shape[1].
 
         base_sd : float
-            The standard deviation of the multivariate normal distribution. Must be strictly positive.
-
+            The standard deviation in the multivariate normal distribution. Must be strictly positive.
+            
         """
 
         super().__init__()
@@ -978,6 +987,7 @@ class BasedenNormal(Baseden):
         new_data : numpy.ndarray
             The new data at which the second partial derivative of the logarithm of the multivariate normal
             base density function is to be evaluated.
+            
         j : int
             The coordinate with respect to which the second partial derivative is taken. It should be between 0
             and self.dim-1.
@@ -999,14 +1009,14 @@ class BasedenNormal(Baseden):
         if j not in range(self.dim):
             raise ValueError("The index j must be between 0 and {d}.".format(d=self.dim - 1))
 
-        output = - 1 / self.base_sd ** 2 * np.ones((new_data.shape[0], 1), dtype=np.float32)
+        output = - 1 / self.base_sd ** 2 * np.ones((new_data.shape[0], 1), dtype=np.float64)
 
         return output
 
     def baseden_eval_1d(self, x):
 
         """
-        Evaluates the univariate normal base density function at a 1-dimensional data point x.
+        Evaluates the normal base density function at a 1-dimensional data point x.
 
         Parameters
         ----------
@@ -1123,7 +1133,7 @@ class BasedenLognormal(Baseden):
         Estimated from data using the method of maximum likelihood.
         
     domain : numpy.ndarray
-        The list [[0., np.inf]] to represent the domain of the log-normal base density function.
+        The domain of the log-normal base density function, that is, [[0., np.inf]].
         
     dim : int
         The dimensionality of data and the underlying log-normal base density function, that is, 1.
@@ -1267,6 +1277,7 @@ class BasedenLognormal(Baseden):
         new_data : numpy.ndarray
             The new data at which the second derivative of the logarithm of the log-normal base density function
             is to be evaluated.
+            
         j : int
             The coordinate with respect to which the second partial derivative is taken. Default is 0 and
             it should always be 0.
