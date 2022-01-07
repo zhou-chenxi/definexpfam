@@ -1,17 +1,17 @@
-from basis_function import *
-from base_density import *
+from definexpfam.basis_function import *
+from definexpfam.base_density import *
 
 
 def scorematching_finexpfam_coef(data, basis_function, base_density):
 
     """
-    Returns the solution to minimizing the score matching loss function
+    Returns the natural parameter that minimizes the score matching loss function
     in finite-dimensional exponential family.
 
     Parameters
     ----------
     data : numpy.ndarray
-        The array of observations whose density function is to be estimated.
+        The array of observations whose probability density function is to be estimated.
 
     basis_function : kernel_function object
         The basis function of the canonical statistic used to estimate the probability density function.
@@ -24,7 +24,7 @@ def scorematching_finexpfam_coef(data, basis_function, base_density):
     Returns
     -------
     numpy.ndarray
-        An array of coefficients for the natural parameter in the score matching density estimate.
+        An array of the natural parameter in the score matching density estimate.
 
     """
 
@@ -58,7 +58,34 @@ def scorematching_finexpfam_coef(data, basis_function, base_density):
 
 def evaluate_scorematching_loss(data, new_data, basis_function, base_density, coef):
     
+    """
+    Evaluates the score matching loss function in a finite-dimensional exponential family.
     
+    Parameters
+    ----------
+    data : numpy.ndarray
+        The array of observations whose probability density function is to be estimated.
+    
+    new_data : numpy.ndarray
+        The array of observations using which the score matching loss function is evaluated.
+        
+    basis_function : kernel_function object
+        The basis function of the canonical statistic used to estimate the probability density function.
+        __type__ must be 'basis_function'.
+
+    base_density : base_density object
+        The base density function used to estimate the probability density function.
+        __type__ must be 'base_density'.
+    
+    coef : numpy.ndarray
+        The natural parameter at which the score matching loss function is to be evaluated.
+    
+    Returns
+    -------
+    float
+        The value of the score matching loss function evaluated at coef.
+        
+    """
     
     data = check_data_type(data)
     data = check_data_dim(data)
@@ -103,10 +130,11 @@ def evaluate_scorematching_loss(data, new_data, basis_function, base_density, co
 
 
 def scorematching_optparam(data, basis_function_name, base_density, param_cand, k_folds,
-                           save_dir=None, save_info=False):
+                           save_info=False, save_dir=None):
+    
     """
     Selects the optimal hyperparameter (e.g., the bandwidth parameter in the Gaussian basis function,
-    and the degree in the polynomial basis function) in the score matching density estimation
+    or the degree in the polynomial basis function) in the score matching density estimate
     using k-fold cross validation and computes the coefficient vector of basis functions
     at this optimal hyperparameter.
 
@@ -115,26 +143,35 @@ def scorematching_optparam(data, basis_function_name, base_density, param_cand, 
     data : numpy.ndarray
         The array of observations whose density function is to be estimated.
 
-
-
-
-
-
+    basis_function_name : str
+        The type of the basis functions used to estimate the probability density function.
+        Must be one of 'Polynomial', 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', and 'Sigmoid'.
+    
+    base_density : base_density object
+        The base density function used to estimate the probability density function.
+        __type__ must be 'base_density'.
+        
+    param_cand : list or numpy.ndarray
+        The list of the hyperparameter candidates.
+        
     k_folds : int
         The number of folds for cross validation.
-    save_dir : str
-        The directory path to which the estimation information is saved; only works when save_info is True.
+    
     save_info : bool, optional
-        Whether to save the estimation information, including the values of score matching loss function of
-        each fold and the coefficient vector at the optimal penalty parameter, to a local file;
+        Whether to save the estimation information, including the values of the score matching loss function of
+        each fold and the coefficient vector at the optimal hyperparameter, to a local file;
         default is False.
-
+        
+    save_dir : str, optional
+        The directory path to which the estimation information is saved; only works when save_info is True;
+        default is None.
+        
     Returns
     -------
     dict
         A dictionary containing opt_para, the value of the optimal hyperparameter, and
-        opt_coef, the coefficient vector of basis functions in the penalized score matching density estimate
-        at the optimal penalty parameter.
+        opt_coef, the natural parameter in the score matching density estimate
+        at the optimal hyperparameter.
 
     """
     
