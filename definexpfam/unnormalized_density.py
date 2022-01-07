@@ -1,17 +1,17 @@
-from basis_function import *
+from definexpfam.basis_function import *
 
 
 class UnnormalizedDensityFinExpFam:
     
     """
-    A class for computing un-normalized density functions.
+    A class for computing un-normalized probability density functions.
 
     ...
 
     Attributes
     ----------
     data : numpy.ndarray
-        The array of observations with which the density function is estimated.
+        The array of observations with which the probability density function is estimated.
     
     basis_function : basis_function object
         The basis function used to estimate the probability density function.
@@ -22,7 +22,7 @@ class UnnormalizedDensityFinExpFam:
         __type__ must be 'base_density'.
     
     coef : numpy.ndarray
-        The array of coefficients for basis functions in the natural parameter in the estimated density function.
+        The array of the estimated natural parameter.
         
     dim : int
         The dimensionality of the data, i.e., the number of columns of the data.
@@ -45,7 +45,7 @@ class UnnormalizedDensityFinExpFam:
         Parameters
         ----------
         data : numpy.ndarray
-            The array of observations whose density function is to be estimated.
+            The array of observations whose probability density function is to be estimated.
     
         basis_function : basis_function object
             The basis function used to estimate the probability density function.
@@ -56,18 +56,18 @@ class UnnormalizedDensityFinExpFam:
             Must be instantiated from the classes with __type__ being 'base_density'.
     
         coef : numpy.ndarray
-            The array of coefficients for the natural parameter in the density estimate.
+            The array of the estimated natural parameter.
             
         """
 
+        if len(data.shape) == 1:
+            data = data.reshape(-1, 1)
+            
         self.data = data
         self.basis_function = basis_function
         self.base_density = base_density
         self.coef = coef.reshape(-1, 1)
         
-        if len(data.shape) == 1:
-            self.data = self.data.reshape(-1, 1)
-            
         self.dim = self.data.shape[1]
     
     def density_eval(self, new_data):
@@ -126,13 +126,14 @@ class UnnormalizedDensityFinExpFam:
             den = (self.base_density.baseden_eval_1d(x) *
                    np.exp(np.sum([self.coef[i] * x ** (i + 1) for i in range(self.basis_function.degree)])))
             
-        elif self.basis_function.basisfunction_name in ['Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', 'Sigmoid']:
+        elif self.basis_function.basisfunction_name in ['Gaussian', 'RationalQuadratic',
+                                                        'Logistic', 'Triweight', 'Sigmoid']:
             
             n_obs = self.basis_function.landmarks.shape[0]
             
             den = (self.base_density.baseden_eval_1d(x) *
-                   np.exp(np.sum([self.coef[i] * self.basis_function.basis_x_1d(self.data[i].item())(x)
-                                  for i in range(n_obs)])))
+                   np.exp(np.sum([self.coef[i] * self.basis_function.basis_x_1d(
+                       self.basis_function.landmarks[i].item())(x) for i in range(n_obs)])))
         
         else:
             
