@@ -1,0 +1,17 @@
+setup.cfg
+setup.py
+definexpfam/__init__.py
+definexpfam/base_density.py
+definexpfam/basis_function.py
+definexpfam/check.py
+definexpfam/contam_density_estimate_sm_ml.py
+definexpfam/data_median_dist.py
+definexpfam/influence_function_contam_data_array.py
+definexpfam/negloglik_finexpfam.py
+definexpfam/plot_density_1d.py
+definexpfam/scorematching_finexpfam.py
+definexpfam/unnormalized_density.py
+definexpfam.egg-info/PKG-INFO
+definexpfam.egg-info/SOURCES.txt
+definexpfam.egg-info/dependency_links.txt
+definexpfam.egg-info/top_level.txt
