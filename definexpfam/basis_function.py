@@ -1,5 +1,5 @@
 import numpy as np
-from check import *
+from definexpfam.check import *
 
 
 class BasisFunction:
@@ -7,6 +7,8 @@ class BasisFunction:
     """
     A parent class for the basis functions.
 
+    Methods
+    -------
     __type__
         Set __type__ to be the basis_function.
 
@@ -22,6 +24,35 @@ class BasisFunction:
 
 
 class PolynomialBasisFunction(BasisFunction):
+    
+    """
+    A class for the polynomial basis functions.
+
+    ...
+
+    Attributes
+    ----------
+    degree : int
+        The degree of the polynomial basis functions; must be a strictly positive integer.
+
+    landmarks : numpy.ndarray
+        The data with which the basis functions are constructed.
+    
+    basisfunction_name : str
+        The name of the basis function, that is, 'Polynomial'.
+        
+    Methods
+    -------
+    basisfunction_eval(new_data)
+        Evaluates of the polynomial basis functions at new_data.
+        
+    basisfunction_deriv1(new_data)
+        Evaluates the first derivative of the polynomial basis functions at new_data.
+        
+    basisfunction_deriv2(new_data)
+        Evaluates the second derivative of the polynomial basis functions at new_data.
+    
+    """
     
     def __init__(self, landmarks, degree):
         
@@ -39,17 +70,18 @@ class PolynomialBasisFunction(BasisFunction):
     def basisfunction_eval(self, new_data):
         
         """
-        Returns the evaluations of the polynomial basis function at new_data.
-        The result is an array of size (self.degree, self.new_data.shape[0])
-        whose (i, j)-entry is new_data[j] ** i.
+        Evaluates the polynomial basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the polynomial basis functions are to be evaluated.
 
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.degree, self.new_data.shape[0])
+            whose (i, j)-entry is new_data[j] ** i.
 
         """
         
@@ -63,17 +95,18 @@ class PolynomialBasisFunction(BasisFunction):
     def basisfunction_deriv1(self, new_data):
         
         """
-        Returns the evaluations of the first derivative of the polynomial basis function at new_data.
-        The result is an array of size (self.degree, self.new_data.shape[0])
-        whose (i, j)-entry is i * new_data[j] ** (i - 1).
+        Evaluates the first derivative of the polynomial basis functions at new_data.
 
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the first derivatives of the polynomial basis functions are to be evaluated.
+            
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.degree, self.new_data.shape[0])
+            whose (i, j)-entry is i * new_data[j] ** (i - 1).
 
         """
         
@@ -87,18 +120,19 @@ class PolynomialBasisFunction(BasisFunction):
     def basisfunction_deriv2(self, new_data):
         
         """
-        Returns the evaluations of the second derivative of the polynomial basis function at new_data.
-        The result is an array of size (self.degree, self.new_data.shape[0])
-        whose (i, j)-entry is i * (i - 1) * new_data[j] ** (i - 2).
+        Evaluates the second derivative of the polynomial basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the second derivatives of the polynomial basis functions are to be evaluated.
 
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.degree, self.new_data.shape[0])
+            whose (i, j)-entry is i * (i - 1) * new_data[j] ** (i - 2).
+            
         """
         
         new_data = check_data_type(new_data)
@@ -125,6 +159,45 @@ class PolynomialBasisFunction(BasisFunction):
 
 class GaussianBasisFunction(BasisFunction):
     
+    """
+    A class for the Gaussian basis functions.
+
+    ...
+
+    Attributes
+    ----------
+    bw : float
+        The bandwidth parameter in the Gaussian basis functions; must be strictly positive.
+        
+    landmarks : numpy.ndarray
+        The data at which the Gaussian basis functions are centered.
+    
+    N : int
+        The number of the Gaussian basis functions.
+    
+    d : int
+        The dimensionality of landmarks.
+    
+    basisfunction_name : str
+        The name of the basis function, that is, 'Gaussian'.
+
+    Methods
+    -------
+    basisfunction_eval(new_data)
+        Evaluates the Gaussian basis functions at new_data.
+    
+    basisfunction_deriv1(new_data)
+        Evaluates the first partial derivative of the Gaussian basis functions at new_data.
+        
+    basisfunction_deriv2(new_data)
+        Evaluates the second partial derivative of the Gaussian basis functions at new_data.
+        
+    basis_x_1d(loc)
+        Returns a function that computes k (loc, y) at y, where k (x, y) = exp(- (x - y) ^ 2 / (2 * bw ^ 2)),
+        both loc and y are 1-dimensional data points.
+
+    """
+    
     def __init__(self, landmarks, bw):
         super().__init__()
         
@@ -141,19 +214,19 @@ class GaussianBasisFunction(BasisFunction):
     def basisfunction_eval(self, new_data):
         
         """
-        Returns the evaluations of the Gaussian basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[0])
-        whose (i, j)-entry is k (X_i, Y_j) = exp(- (X_i - Y_j)^2 / (2 * bw ^ 2)),
-        where X_i is the i-th row in data, and Y_j is the j-th row in new_data.
+        Evaluates the Gaussian basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the Gaussian basis functions are to be evaluated.
 
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[0])
+            whose (i, j)-entry is exp(- (X_i - Y_j)^2 / (2 * bw ^ 2)),
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -179,21 +252,20 @@ class GaussianBasisFunction(BasisFunction):
     def basisfunction_deriv1(self, new_data):
         
         """
-        Returns the evaluations of the first partial derivative of the Gaussian basis function
-        with respect to the second argument at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[0])
-        whose (i, j)-entry is
-        partial_2 k (X_i, Y_j) = exp(- (X_i - Y_j)^2 / (2 * bw ^ 2)) * (X_i - Y_j) / bw ^ 2,
-        where X_i is the i-th row in data, and Y_j is the j-th row in new_data.
+        Evaluates the first partial derivatives of the Gaussian basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the first derivatives of the Gaussian basis functions are to be evaluated.
 
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[0])
+            whose (i, j)-entry is exp(- (X_i - Y_j)^2 / (2 * bw ^ 2)) * (X_i - Y_j) / bw ^ 2,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+        
         """
         
         new_data = check_data_type(new_data)
@@ -213,20 +285,19 @@ class GaussianBasisFunction(BasisFunction):
     def basisfunction_deriv2(self, new_data):
         
         """
-        Returns the evaluations of the second partial derivative of the Gaussian basis function
-        with respect to the second argument at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[0])
-        whose (i, j)-entry is
-        partial_2 k (X_i, Y_j) = exp(- (X_i - Y_j)^2 / (2 * bw ^ 2)) * ((X_i - Y_j) ^ 2 - bw ^ 2) / bw ^ 4,
-        where X_i is the i-th row in data, and Y_j is the j-th row in new_data
+        Evaluates the second partial derivatives of the Gaussian basis functions at new_data.
 
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the second derivatives of the Gaussian basis functions are to be evaluated.
+            
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[0])
+            whose (i, j)-entry is exp(- (X_i - Y_j)^2 / (2 * bw ^ 2)) * ((X_i - Y_j) ^ 2 - bw ^ 2) / bw ^ 4,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -275,6 +346,47 @@ class GaussianBasisFunction(BasisFunction):
 
 class RationalQuadraticBasisFunction(BasisFunction):
     
+    """
+    A class for the rational quadratic basis function.
+
+    ...
+
+    Attributes
+    ----------
+    bw : float
+        The bandwidth parameter in the rational quadratic basis functions; must be strictly positive.
+    
+    landmarks : numpy.ndarray
+        The data at which the basis functions are centered.
+    
+    N : int
+        The number of the rational quadratic basis functions.
+    
+    d : int
+        The dimensionality of self.landmarks.
+
+    basisfunction_name : str
+        The name of the basis function, that is, 'RationalQuadratic'.
+
+    Methods
+    -------
+    basisfunction_eval(new_data)
+        Evaluates the rational quadratic basis functions at new_data.
+    
+    basisfunction_deriv1(new_data)
+        Evaluates the first partial derivatives of the rational quadratic
+        basis functions at new_data.
+
+    basisfunction_deriv2(new_data)
+        Evaluates the second partial derivatives of the rational quadratic
+        basis functions at new_data.
+
+    basis_x_1d(loc)
+        Returns a function that computes k (loc, y) at y, where k (x, y) = 1 / (1 + (x - y) ^ 2 / bw ^ 2),
+        both loc and y are 1-dimensional data points.
+        
+    """
+    
     def __init__(self, landmarks, bw):
         super().__init__()
         
@@ -291,18 +403,19 @@ class RationalQuadraticBasisFunction(BasisFunction):
     def basisfunction_eval(self, new_data):
         
         """
-        Returns the evaluations of the rational quadratic basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1])
-        whose (i, j)-entry is 1 / (1 + ((X_i - Y_j) ^ 2 / (bw ^ 2))),
-        where X_i is the i-th row in data, and Y_j is the j-th row in new_data.
-
+        Evaluates the rational quadratic basis functions at new_data.
+        
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the rational quadratic basis functions are to be evaluated.
 
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is 1 / (1 + ((X_i - Y_j) ^ 2 / (bw ^ 2))),
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -328,18 +441,21 @@ class RationalQuadraticBasisFunction(BasisFunction):
     def basisfunction_deriv1(self, new_data):
         
         """
-        Returns the evaluations of the first partial derivative of the rational quadratic
-        basis function with respect to the second at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[0])
-        whose (i, j)-entry is 2 * (1 + (X_i - Y_j) ^ 2 / (bw ^ 2)) ^ (-2) * (X_i - Y_j) / bw ^ 2.
+        Evaluates the first partial derivatives of the rational quadratic
+        basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the first derivatives of the rational quadratic basis functions
+            are to be evaluated.
 
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[0])
+            whose (i, j)-entry is 2 * (1 + (X_i - Y_j) ^ 2 / (bw ^ 2)) ^ (-2) * (X_i - Y_j) / bw ^ 2,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -349,8 +465,6 @@ class RationalQuadraticBasisFunction(BasisFunction):
         
         assert self.d == d1, "The dimensionality of new_data does not match that of data. "
         
-        # ----------------------------------------------------------------------
-        # Rational quadratic kernel part
         rq_kernel = np.repeat(self.basisfunction_eval(new_data=new_data), repeats=self.d, axis=0)
         multi_rq1 = np.repeat(self.landmarks.flatten(), n).reshape(self.N * self.d, n)
         multi_rq2 = np.tile(new_data.T, (self.N, 1))
@@ -361,19 +475,22 @@ class RationalQuadraticBasisFunction(BasisFunction):
     def basisfunction_deriv2(self, new_data):
         
         """
-        Returns the evaluations of the second partial derivative of the rational quadratic
-        basis function with respect to the second at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[0])
-        whose (i, j)-entry is
-        4 * (1+(X_i-Y_j)^2/(bw^2))^(-3) * (X_i-Y_j)^2/bw^4 - 2 * (1+(X_i-Y_j)^2/(bw^2))^(-2)/bw^2.
-
+        Evaluates the second partial derivatives of the rational quadratic
+        basis functions at new_data.
+        
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the second derivatives of the rational quadratic basis functions
+            are to be evaluated.
+            
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[0]) whose (i, j)-entry is
+            8 * (1 + (X_i - Y_j) ^ 2 / (bw ^ 2)) ^ (-3) * (X_i - Y_j) ^ 2 / bw ^ 4 -
+            2 * (1 + (X_i - Y_j) ^ 2 / (bw ^ 2)) ^ (-2) / bw ^ 2,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -423,6 +540,46 @@ class RationalQuadraticBasisFunction(BasisFunction):
 
 class LogisticBasisFunction(BasisFunction):
     
+    """
+    A class for the logistic basis function.
+
+    ...
+
+    Attributes
+    ----------
+    bw : float
+        The bandwidth parameter in the logistic basis functions; must be strictly positive.
+    
+    landmarks : numpy.ndarray
+        The data at which the basis functions are centered.
+    
+    N : int
+        The number of the basis functions.
+    
+    d : int
+        The dimensionality of self.landmarks.
+        
+    basisfunction_name : str
+        The name of the basis function, that is, 'Logistic'.
+
+    Methods
+    -------
+    basisfunction_eval(new_data)
+        Evaluates the logistic basis functions at new_data.
+    
+    basisfunction_deriv1(new_data)
+        Evaluates the first partial derivatives of the logistic basis functions at new_data.
+    
+    basisfunction_deriv2(new_data)
+        Evaluates the second derivatives of the logistic basis functions at new_data.
+    
+    basis_x_1d(loc)
+        Returns a function that computes k (loc, y) at y, where
+        k (x, y) = 1 / (exp(-(x - y) / (2 * self.bw)) + exp((x - y) / (2 * self.bw)))^2,
+        both loc and y are 1-dimensional data points.
+
+    """
+    
     def __init__(self, landmarks, bw):
         super().__init__()
         
@@ -440,18 +597,20 @@ class LogisticBasisFunction(BasisFunction):
     def basisfunction_eval(self, new_data):
         
         """
-        Returns the evaluations of the Logistic basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1])
-        whose (i, j)-entry is (sech(-(X_i - Y_j) / (2 * self.bw))) ^ 2 / 4,
-        also equal to 1 / (exp(-(X_i - Y_j) / (2 * self.bw)) + exp((X_i - Y_j) / (2 * self.bw)))^2.
+        Evaluates the logistic basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the logistic basis functions are to be evaluated.
 
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is (sech(-(X_i - Y_j) / (2 * self.bw))) ^ 2 / 4,
+            also equal to 1 / (exp(-(X_i - Y_j) / (2 * self.bw)) + exp((X_i - Y_j) / (2 * self.bw)))^2,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -477,17 +636,22 @@ class LogisticBasisFunction(BasisFunction):
     def basisfunction_deriv1(self, new_data):
         
         """
-        Returns the evaluations of the first partial derivative of the Logistic basis function
+        Returns the evaluations of the first partial derivatives of the logistic basis functions
         with respect to the second argument at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
-
+        
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the first derivatives of the logistic basis functions are to be evaluated.
+            
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is
+            (exp((X_i - Y_j) / (2 * self.bw)) - exp(-(X_i - Y_j) / (2 * self.bw))) /
+            (exp(-(X_i - Y_j) / (2 * self.bw)) + exp((X_i - Y_j) / (2 * self.bw)))^3 / self.bw,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
 
         """
         
@@ -515,17 +679,20 @@ class LogisticBasisFunction(BasisFunction):
     def basisfunction_deriv2(self, new_data):
         
         """
-        Returns the evaluations of the second derivative of the Logistic basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1])
-        whose (i, j)-entry is i * (i - 1) * new_data[j] ** (i - 2).
-
+        Evaluates the second derivatives of the logistic basis functions at new_data.
+        
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the second derivatives of the logistic basis functions are to be evaluated.
 
         Returns
         -------
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is the second partial derivative of the logistic basis functions
+            evaluated at (X_i, Y_j), where X_i is the i-th row in self.landmarks,
+            and Y_j is the j-th row in new_data.
 
         """
         
@@ -584,9 +751,42 @@ class LogisticBasisFunction(BasisFunction):
 class TriweightBasisFunction(BasisFunction):
     
     """
-    T_j (x) = (1 - (landmarks[j] - x)^2 / bw^2)^3
+    A class for the triweight basis function.
 
+    ...
 
+    Attributes
+    ----------
+    bw : float
+        The bandwidth parameter in the triweight basis functions; must be strictly positive.
+    
+    landmarks : numpy.ndarray
+        The data at which the basis functions are centered.
+        
+    N : int
+        The number of the basis functions.
+    
+    d : int
+        The dimensionality of self.landmarks.
+    
+    basisfunction_name : str
+        The name of the basis function, that is, 'Triweight'.
+    
+    Methods
+    -------
+    basisfunction_eval(new_data)
+        Evaluates the triweight basis functions at new_data.
+        
+    basisfunction_deriv1(new_data)
+        Evaluates the first derivatives of the triweight basis functions at new_data.
+        
+    basisfunction_deriv2(new_data)
+        Evaluates the second derivatives of the triweight basis functions at new_data.
+    
+    basis_x_1d(loc)
+        Returns a function that computes k (loc, y) at y, where
+        k (x, y) = (1 - (x - y) ^ 2 / self.bw ^ 2) ^ 3 if |x - y| <= self.bw, and k (x, y) = 0, otherwise,
+        both loc and y are 1-dimensional data points.
 
     """
     
@@ -607,17 +807,21 @@ class TriweightBasisFunction(BasisFunction):
     def basisfunction_eval(self, new_data):
         
         """
-        Returns the evaluations of the triweight basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
+        Evaluates the triweight basis functions at new_data.
 
         Parameters
         ----------
-
-
+        new_data : numpy.ndarray
+            A new data array at which the triweight basis functions are to be evaluated.
 
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is (1 - (X_i - Y_j)^2 / self.bw ^ 2) ^ 3
+            if |X_i - Y_j| is less than or equal to self.bw and is 0 otherwise,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+            
         """
         
         new_data = check_data_type(new_data)
@@ -641,18 +845,23 @@ class TriweightBasisFunction(BasisFunction):
         return output.T
     
     def basisfunction_deriv1(self, new_data):
+        
         """
-        Returns the evaluations of the first derivative of the triweight basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
+        Evaluates the first derivatives of the triweight basis functions at new_data.
 
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the first derivatives of the triweight basis functions are to be evaluated.
+            
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is 6 * (1 - (X_i - Y_j) ^ 2 / self.bw ^ 2) ^ 2 * (X_i - Y_j) / self.bw ^ 2
+            if |X_i - Y_j| is less than or equal to self.bw and is 0 otherwise,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+            
         """
         
         new_data = check_data_type(new_data)
@@ -674,18 +883,24 @@ class TriweightBasisFunction(BasisFunction):
         return output.T
     
     def basisfunction_deriv2(self, new_data):
+        
         """
-        Returns the evaluations of the second derivative of the triweight basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
+        Evaluates the second derivatives of the triweight basis functions at new_data.
 
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the second derivatives of the triweight basis functions are to be evaluated.
+            
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is
+            -6 * (1 - 5 * (X_i - Y_j) ^ 2 / self.bw ^ 2) ^ 2) * (1 - (X_i - Y_j) ^ 2 / self.bw ^ 2) / self.bw ^ 2
+            if |X_i - Y_j| is less than or equal to self.bw and is 0 otherwise,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+            
         """
         
         new_data = check_data_type(new_data)
@@ -743,8 +958,42 @@ class TriweightBasisFunction(BasisFunction):
 class SigmoidBasisFunction(BasisFunction):
     
     """
+    A class for the sigmoid basis function.
 
-    T_j (x) = 1 / (1 + exp(-(landmark[j] - x)/bw))
+    ...
+
+    Attributes
+    ----------
+    bw : float
+        The bandwidth parameter in the sigmoid basis functions; must be strictly positive.
+    
+    landmarks : numpy.ndarray
+        The data at which the sigmoid basis functions are centered.
+    
+    N : int
+        The number of the basis functions.
+        
+    d : int
+        The dimensionality of landmarks.
+    
+    basisfunction_name : str
+        The name of the basis function, that is, 'Sigmoid'.
+        
+    Methods
+    -------
+    basisfunction_eval(new_data)
+        Evaluates the sigmoid basis functions at new_data.
+        
+    basisfunction_deriv1(new_data)
+        Evaluates the first derivatives of the sigmoid basis functions at new_data.
+        
+    basisfunction_deriv2(new_data)
+        Evaluates the second derivatives of the sigmoid basis functions at new_data.
+        
+    basis_x_1d(loc)
+        Returns a function that computes k (loc, y) at y, where
+        k (x, y) = 1 / (1 + exp ( - (x - y) / self.bw)),
+        and both loc and y are 1-dimensional data points.
 
     """
     
@@ -763,18 +1012,22 @@ class SigmoidBasisFunction(BasisFunction):
         self.basisfunction_name = 'Sigmoid'
     
     def basisfunction_eval(self, new_data):
+        
         """
-        Returns the evaluations of the sigmoid basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
+        Evaluates the sigmoid basis functions at new_data.
 
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the sigmoid basis functions are to be evaluated.
+            
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is 1 / (1 + exp(-(x - y) / self.bw)),
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+            
         """
         
         new_data = check_data_type(new_data)
@@ -796,18 +1049,22 @@ class SigmoidBasisFunction(BasisFunction):
         return output.T
     
     def basisfunction_deriv1(self, new_data):
+        
         """
-        Returns the evaluations of the first derivative of the sigmoid basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1]).
+        Evaluates the first derivatives of the sigmoid basis functions at new_data.
 
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the first derivatives of the sigmoid basis function are to be evaluated.
+            
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is - exp(-(X_i - Y_j) / self.bw) / (1 + exp(-(X_i - Y_j) / self.bw)) ^ 2 / self.bw,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+            
         """
         
         new_data = check_data_type(new_data)
@@ -829,19 +1086,24 @@ class SigmoidBasisFunction(BasisFunction):
         return output.T
     
     def basisfunction_deriv2(self, new_data):
+        
         """
-        Returns the evaluations of the second derivative of the XXXXXX basis function at new_data.
-        The result is an array of size (self.landmarks.shape[0], self.new_data.shape[1])
-        whose (i, j)-entry is i * (i - 1) * new_data[j] ** (i - 2).
-
+        Evaluates the second derivatives of the sigmoid basis functions at new_data.
+        
         Parameters
         ----------
-
-
-
+        new_data : numpy.ndarray
+            A new data array at which the second derivatives of the sigmoid basis functions are to be evaluated.
+            
         Returns
         -------
-
+        numpy.ndarray
+            An array of shape (self.landmarks.shape[0], self.new_data.shape[1])
+            whose (i, j)-entry is
+            2 * exp(-2 * (x - y) / self.bw) / (1 + exp(-(x - y) / self.bw)) ^ 3 / self.bw ^ 2 -
+                exp(-(x - y) / self.bw) / (1 + exp(-(x - y) / self.bw)) ^ 2 / self.bw ^ 2,
+            where X_i is the i-th row in self.landmarks, and Y_j is the j-th row in new_data.
+            
         """
         
         new_data = check_data_type(new_data)
@@ -868,7 +1130,7 @@ class SigmoidBasisFunction(BasisFunction):
     
         """
         Returns a function that computes k (loc, y) at y, where
-        k (x, y) = 1 / (1 + exp(-(x - y) / bw)),
+        k (x, y) = 1 / (1 + exp(-(x - y) / self.bw)),
         both loc and y are 1-dimensional data points.
 
         Parameters
