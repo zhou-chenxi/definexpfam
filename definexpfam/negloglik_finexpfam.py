@@ -1,25 +1,26 @@
-from basis_function import *
-from base_density import *
+from definexpfam.basis_function import *
+from definexpfam.base_density import *
 
 
 def negloglik_finexpfam_grad_logpar_batchmc(data, basis_function, base_density, coef, batch_size, tol_param,
-                                            normalizing_const_only=False, print_error=False):
+                                            compute_grad=True, print_error=False):
     
     """
-    Approximates the log-partition function, A, at coef and its gradient at coef.
+    Approximates the partition function and the gradient of the log-partition function at coef.
     The approximation method used is the batch Monte Carlo method. Terminate the sampling process
     until the relative difference of two consecutive approximations is less than tol_param.
 
     Let Y_1, ..., Y_M be random samples from the base density.
-    The log-partition function evaluated at coef, A(coef), is approximated by
-    log ((1 / M) sum_{i=1}^M exp ( sum_{j=1}^m coef[j] T_j (Y_i) )),
+    The partition function evaluated at coef is approximated by
+    (1 / M) sum_{i=1}^M exp ( sum_{j=1}^m coef[j] T_j (Y_i) ),
     and the gradient of the log-partition function evaluated at coef is approximated by
-    (1 / M) sum_{i=1}^M T_l (Y_i) exp ( sum_{j=1}^m coef[j] T_j (Y_i) - A(coef)), for all l = 1, ..., n.
+    (1 / M) sum_{i=1}^M T_l (Y_i) exp ( sum_{j=1}^m coef[j] T_j (Y_i) - A(coef)), for all l = 1, ..., m,
+    where A(coef) is the log-parition function at coef, and m is the number of basis functions.
     
     Parameters
     ----------
     data : numpy.ndarray
-        The array of observations whose density function is to be estimated.
+        The array of observations whose probability density function is to be estimated.
     
     basis_function : basis_function object
         The basis function used to estimate the probability density function.
@@ -30,7 +31,8 @@ def negloglik_finexpfam_grad_logpar_batchmc(data, basis_function, base_density, 
         __type__ must be 'base_density'.
         
     coef : numpy.ndarray
-        The array of coefficients at which the log-partition function and its gradient are approximated.
+        The array of natural parameter at which the partition function
+        and the gradient of the log-partition function are to be approximated.
 
     batch_size : int
         The batch size in the batch Monte Carlo method.
@@ -39,8 +41,8 @@ def negloglik_finexpfam_grad_logpar_batchmc(data, basis_function, base_density, 
         The floating point number below which sampling in the batch Monte Carlo is terminated.
         The smaller the tol_param is, the more accurate the approximations are.
     
-    normalizing_const_only : bool, optional
-        Whether to ONLY approximate the log-partition function but not its gradient; default is False.
+    compute_grad : bool, optional
+        Whether to approximate the gradient of the log-partition function; default is True.
 
     print_error : bool, optional
         Whether to print the error in the batch Monte Carlo method; default is False.
@@ -48,11 +50,11 @@ def negloglik_finexpfam_grad_logpar_batchmc(data, basis_function, base_density, 
     Returns
     -------
     float
-        The approximation of the log-partition function evaluated at coef.
+        The approximation of the partition function evaluated at coef.
     
     numpy.ndarray
         The approximation of the gradient of the log-partition function evaluated at coef;
-        only returns when normalizing_const_only is False.
+        only returns when compute_grad is True.
         
     """
     
@@ -114,7 +116,7 @@ def negloglik_finexpfam_grad_logpar_batchmc(data, basis_function, base_density, 
     
     normalizing_const = norm_est_new
     
-    if not normalizing_const_only:
+    if compute_grad:
         
         if print_error:
             print("#" * 45 + "\nEstimating the gradient of the log-partition now.")
@@ -161,30 +163,31 @@ def negloglik_finexpfam_grad_logpar_batchmc(data, basis_function, base_density, 
             if print_error: 
                 print('gradient error = {error:.7f}'.format(error=error_grad))
     
-    if normalizing_const_only: 
+    if not compute_grad:
         return norm_est_new
     else: 
         return norm_est_new, grad_est_new
 
 
 def negloglik_finexpfam_grad_logpar_batchmc_se(data, basis_function, base_density, coef, batch_size, tol_param,
-                                               normalizing_const_only=False, print_error=False):
+                                               compute_grad=True, print_error=False):
     
     """
-    Approximates the log-partition function, A, at coef and its gradient at coef.
+    Approximates the partition function and the gradient of the log-partition function at coef.
     The approximation method used is the batch Monte Carlo method. Terminate the sampling process
     until the standard deviation of the approximations is less than tol_param.
     
     Let Y_1, ..., Y_M be random samples from the base density.
-    The log-partition function evaluated at coef, A(coef), is approximated by
-    log ((1 / M) sum_{i=1}^M exp ( sum_{j=1}^m coef[j] T_j (Y_i) )),
+    The partition function evaluated at coef is approximated by
+    (1 / M) sum_{i=1}^M exp ( sum_{j=1}^m coef[j] T_j (Y_i) ),
     and the gradient of the log-partition function evaluated at coef is approximated by
-    (1 / M) sum_{i=1}^M T_l (Y_i) exp ( sum_{j=1}^m coef[j] T_j (Y_i) - A(coef)), for all l = 1, ..., n.
+    (1 / M) sum_{i=1}^M T_l (Y_i) exp ( sum_{j=1}^m coef[j] T_j (Y_i) - A(coef)), for all l = 1, ..., m,
+    where A(coef) is the log-partition function, and m is the number of basis functions.
     
     Parameters
     ----------
     data : numpy.ndarray
-        The array of observations whose density function is to be estimated.
+        The array of observations whose probability density function is to be estimated.
     
     basis_function : basis_function object
         The basis function used to estimate the probability density function.
@@ -195,7 +198,8 @@ def negloglik_finexpfam_grad_logpar_batchmc_se(data, basis_function, base_densit
         __type__ must be 'base_density'.
         
     coef : numpy.ndarray
-        The array of coefficients at which the log-partition function and its gradient are approximated.
+        The array of natural parameter at which the partition function
+        and the gradient of the log-partition function are to be approximated.
 
     batch_size : int
         The batch size in the batch Monte Carlo method.
@@ -204,8 +208,8 @@ def negloglik_finexpfam_grad_logpar_batchmc_se(data, basis_function, base_densit
         The floating point number below which sampling in the batch Monte Carlo is terminated.
         The smaller the tol_param is, the more accurate the approximations are.
     
-    normalizing_const_only : bool, optional
-        Whether to ONLY approximate the log-partition function but not its gradient; default is False.
+    compute_grad : bool, optional
+        Whether to approximate the gradient of the log-partition function; default is True.
 
     print_error : bool, optional
         Whether to print the error in the batch Monte Carlo method; default is False.
@@ -213,22 +217,25 @@ def negloglik_finexpfam_grad_logpar_batchmc_se(data, basis_function, base_densit
     Returns
     -------
     float
-        The approximation of the log-partition function evaluated at coef.
+        The approximation of the partition function evaluated at coef.
     
     numpy.ndarray
         The approximation of the gradient of the log-partition function evaluated at coef;
-        only returns when normalizing_const_only is False.
+        only returns when compute_grad is True.
 
     """
     
     if len(data.shape) == 1:
         data = data.reshape(-1, 1)
 
-        if len(coef.shape) == 1:
-            coef = coef.reshape(-1, 1)
-        
-    N, d = data.shape
+    if len(coef.shape) == 1:
+        coef = coef.reshape(-1, 1)
     
+    if basis_function.basisfunction_name == 'Polynomial':
+        N = basis_function.degree
+    else:
+        N = basis_function.landmarks.shape[0]
+        
     ###########################################################################
     # estimate the normalizing constant
     # first drawing
@@ -268,7 +275,8 @@ def negloglik_finexpfam_grad_logpar_batchmc_se(data, basis_function, base_densit
     normalizing_const = avg_norm_const
     print(batch_cnt)
     
-    if not normalizing_const_only:
+    if compute_grad:
+        
         print("#" * 45 + "\nApproximating the gradient of the log-partition now.")
         
         mc_samples = base_density.sample(batch_size)
@@ -306,10 +314,8 @@ def negloglik_finexpfam_grad_logpar_batchmc_se(data, basis_function, base_densit
             
             if print_error:
                 print('gradient error = {error:.7f}'.format(error=error_grad))
-                
-        print(batch_cnt)
     
-    if normalizing_const_only:
+    if not compute_grad:
         return normalizing_const
     else:
         return normalizing_const, grad_est
@@ -344,17 +350,17 @@ def batch_montecarlo_params(mc_batch_size=1000, mc_tol=1e-2):
     return output
 
 
-def negloglik_optalgoparams(start_pt, step_size=0.01, max_iter=1e2, rel_tol=1e-5):
+def negloglik_optalgo_params(start_pt, step_size=0.01, max_iter=1e2, rel_tol=1e-5, abs_tol=1e-5):
     
     """
-    Returns a dictionary of parameters used in minimizing the (penalized) negative log-likelihood loss function
+    Returns a dictionary of parameters used in minimizing the negative log-likelihood loss function
     by using the gradient descent algorithm.
 
     Parameters
     ----------
     start_pt : numpy.ndarray
         The starting point of the gradient descent algorithm to minimize
-        the penalized negative log-likelihood loss function.
+        the negative log-likelihood loss function.
 
     step_size : float or list or numpy.ndarray
         The step size used in the gradient descent algorithm; default is 0.01.
@@ -364,7 +370,11 @@ def negloglik_optalgoparams(start_pt, step_size=0.01, max_iter=1e2, rel_tol=1e-5
 
     rel_tol : float
         The relative tolerance parameter to terminate the gradient descent algorithm in minimizing
-        the penalized negative log-likelihood loss function; default is 1e-5.
+        the negative log-likelihood loss function; default is 1e-5.
+    
+    abs_tol : float
+        The absolute tolerance parameter to terminate the gradient descent algorithm in minimizing
+        the negative log-likelihood loss function; default is 1e-5.
 
     Returns
     -------
@@ -373,27 +383,33 @@ def negloglik_optalgoparams(start_pt, step_size=0.01, max_iter=1e2, rel_tol=1e-5
 
     """
 
+    assert step_size > 0., 'step_size must be strictly positive.'
+    assert rel_tol > 0., 'rel_tol must be strictly positive.'
+    assert abs_tol > 0., 'abs_tol must be strictly positive.'
+
     max_iter = int(max_iter)
     
     output = {"start_pt": start_pt,
               "step_size": step_size,
               "max_iter": max_iter,
-              "rel_tol": rel_tol}
+              "rel_tol": rel_tol,
+              "abs_tol": abs_tol}
 
     return output
 
+
 def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params, batchmc_params,
-                             batch_mc=True, batch_mc_se=False, print_error=True):
+                             batch_mc=True, print_error=True):
 
     """
-    Returns the solution to minimizing the negative log-likelihood loss function
+    Returns the natural parameter that minimizes the negative log-likelihood loss function
     in a finite-dimensional exponential family.
     The underlying minimization algorithm is the gradient descent algorithm.
 
     Parameters
     ----------
     data : numpy.ndarray
-        The array of observations whose density function is to be estimated.
+        The array of observations whose probability density function is to be estimated.
 
     basis_function : basis_function object
         The basis function used to estimate the probability density function.
@@ -405,28 +421,26 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
 
     optalgo_params : dict
         The dictionary of parameters to control the gradient descent algorithm.
-        Must be returned from the function negloglik_penalized_optalgoparams.
+        Must be returned from the function negloglik_optalgo_params.
 
     batchmc_params : dict
         The dictionary of parameters to control the batch Monte Carlo method
-        to approximate the log-partition function and its gradient.
+        to approximate the partition function and the gradient of the log-partition function.
         Must be returned from the function batch_montecarlo_params.
 
     batch_mc : bool, optional
         Whether to use the batch Monte Carlo method with the termination criterion
         being the relative difference of two consecutive approximations; default is True.
-
-    batch_mc_se : bool, optional
-        Whether to use the batch Monte Carlo method with the termination criterion
-        being the standard deviation of approximations; default is False.
-
+        If it is False, the batch Monte Carlo method with the termination criterion
+        being the standard deviation of the approximations will be used.
+        
     print_error : bool, optional
         Whether to print the error of the gradient descent algorithm at each iteration; default is True.
 
     Returns
     -------
     numpy.ndarray
-        An array of coefficients for the natural parameter in the negative log-likelihood density estimate.
+        An array of the natural parameter in the negative log-likelihood density estimate.
 
     """
 
@@ -436,12 +450,13 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
     N, d = data.shape
 
     # parameters associated with gradient descent algorithm
-    start_pt = optalgo_params["start_pt"]
-    step_size = optalgo_params["step_size"]
-    max_iter = optalgo_params["max_iter"]
-    rel_tol = optalgo_params["rel_tol"]
+    start_pt = optalgo_params['start_pt']
+    step_size = optalgo_params['step_size']
+    max_iter = optalgo_params['max_iter']
+    rel_tol = optalgo_params['rel_tol']
+    abs_tol = optalgo_params['abs_tol']
 
-    if not type(step_size) == float:
+    if not isinstance(step_size, float):
         raise TypeError(("The type of step_size in optalgo_params should be float, but got {}".format(
             type(step_size))))
 
@@ -450,8 +465,8 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
             step_size))
 
     # parameters associated with batch Monte Carlo estimation
-    mc_batch_size = batchmc_params["mc_batch_size"]
-    mc_tol = batchmc_params["mc_tol"]
+    mc_batch_size = batchmc_params['mc_batch_size']
+    mc_tol = batchmc_params['mc_tol']
 
     # the gradient of the loss function is
     # nabla L (alpha) = nabla A (alpha) - (1 / n) gram_matrix boldone_n
@@ -470,12 +485,12 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
             coef=current_iter,
             batch_size=mc_batch_size,
             tol_param=mc_tol,
-            normalizing_const_only=False,
+            compute_grad=True,
             print_error=False)
 
         grad_logpar = mc_output2.reshape(-1, 1)
 
-    elif batch_mc_se:
+    else:
 
         mc_output1, mc_output2 = negloglik_finexpfam_grad_logpar_batchmc_se(
             data=data,
@@ -484,16 +499,11 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
             coef=current_iter,
             batch_size=mc_batch_size,
             tol_param=mc_tol,
-            normalizing_const_only=False,
+            compute_grad=True,
             print_error=False)
 
         grad_logpar = mc_output2.reshape(-1, 1)
-
-    else:
         
-        raise NotImplementedError(("In order to approximate the gradient of the log-partition function, "
-                                   "exactly one of 'batch_mc' and 'batch_mc_se' must be set True."))
-
     # form the Gram matrix
     gram = basis_function.basisfunction_eval(data)
     grad_term2 = gram.mean(axis=1, keepdims=True)
@@ -506,6 +516,7 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
 
     # compute the error of the first update
     grad0_norm = np.linalg.norm(current_grad, 2)
+    grad_new_norm = grad0_norm
     error = grad0_norm / grad0_norm
     # np.linalg.norm(new_iter - current_iter, 2) / (np.linalg.norm(current_iter, 2) + 1e-1)
 
@@ -515,7 +526,7 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
         print("Iter = {iter_num}, GradNorm = {gradnorm}, Relative Error = {error}".format(
             iter_num=iter_num, gradnorm=grad0_norm, error=error))
 
-    while error > rel_tol and iter_num < max_iter:
+    while error > rel_tol and grad_new_norm > abs_tol and iter_num < max_iter:
 
         current_iter = new_iter
 
@@ -529,12 +540,12 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
                 coef=current_iter,
                 batch_size=mc_batch_size,
                 tol_param=mc_tol,
-                normalizing_const_only=False,
+                compute_grad=True,
                 print_error=False)
 
             grad_logpar = mc_output2.reshape(-1, 1)
 
-        elif batch_mc_se:
+        else:
 
             mc_output1, mc_output2 = negloglik_finexpfam_grad_logpar_batchmc_se(
                 data=data,
@@ -543,16 +554,11 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
                 coef=current_iter,
                 batch_size=mc_batch_size,
                 tol_param=mc_tol,
-                normalizing_const_only=False,
+                compute_grad=True,
                 print_error=False)
 
             grad_logpar = mc_output2.reshape(-1, 1)
-
-        else:
-
-            raise NotImplementedError(("In order to approximate the gradient of the log-partition function, "
-                                       "exactly one of 'batch_mc' and 'batch_mc_se' must be set True."))
-
+            
         # compute the gradient of the loss function
         current_grad = grad_logpar - grad_term2
 
@@ -575,46 +581,46 @@ def negloglik_finexpfam_coef(data, basis_function, base_density, optalgo_params,
     return coefficients
 
 
-def evaluate_negloglik_loss(data, new_data, basis_function, base_density, coef, batchmc_params,
-                            batch_mc=True, batch_mc_se=False):
+def evaluate_negloglik_loss(data, new_data, basis_function, base_density, coef, batchmc_params, batch_mc=True):
+    
     """
-
-
+    Evaluates the negative log-likelihood loss function in a finite-dimensional exponential family.
+    
     Parameters
     ----------
     data : numpy.ndarray
-        The array of observations whose density function is to be estimated.
-
+        The array of observations whose probability density function is to be estimated.
+    
+    new_data : numpy.ndarray
+        The array of observations using which the negative log-likelihood loss function is evaluated.
+    
     basis_function : basis_function object
         The basis function used to estimate the probability density function.
         __type__ must be 'basis_function'.
-
+        
     base_density : base_density object
         The base density function used to estimate the probability density function.
         __type__ must be 'base_density'.
-
-    coef :
-
+        
+    coef : numpy.ndarray
+        The natural parameter at which the score matching loss function is to be evaluated.
+        
     batchmc_params : dict
         The dictionary of parameters to control the batch Monte Carlo method
-        to approximate the log-partition function and its gradient.
+        to approximate the partition function and the gradient of the log-partition function.
         Must be returned from the function batch_montecarlo_params.
-
+        
     batch_mc : bool, optional
         Whether to use the batch Monte Carlo method with the termination criterion
         being the relative difference of two consecutive approximations; default is True.
-
-    batch_mc_se : bool, optional
-        Whether to use the batch Monte Carlo method with the termination criterion
-        being the standard deviation of approximations; default is False.
-
-    print_error : bool, optional
-        Whether to print the error of the gradient descent algorithm at each iteration; default is True.
-
+        If it is False, the batch Monte Carlo method with the termination criterion
+        being the standard deviation of the approximations will be used.
+        
     Returns
     -------
-
-
+    float
+        The value of the negative log-likelihood loss function evaluated at coef.
+    
     """
     
     new_data = check_data_type(new_data)
@@ -641,10 +647,10 @@ def evaluate_negloglik_loss(data, new_data, basis_function, base_density, coef, 
             coef=coef,
             batch_size=mc_batch_size,
             tol_param=mc_tol,
-            normalizing_const_only=True,
+            compute_grad=False,
             print_error=False)
     
-    elif batch_mc_se:
+    else:
         
         mc_output1 = negloglik_finexpfam_grad_logpar_batchmc_se(
             data=data,
@@ -653,14 +659,9 @@ def evaluate_negloglik_loss(data, new_data, basis_function, base_density, coef, 
             coef=coef,
             batch_size=mc_batch_size,
             tol_param=mc_tol,
-            normalizing_const_only=True,
+            compute_grad=False,
             print_error=False)
-    
-    else:
         
-        raise NotImplementedError(("In order to approximate the gradient of the log-partition function, "
-                                   "exactly one of 'batch_mc' and 'batch_mc_se' must be set True."))
-    
     norm_const = mc_output1
     Af = np.log(norm_const)
     
@@ -675,24 +676,21 @@ def evaluate_negloglik_loss(data, new_data, basis_function, base_density, coef, 
 
 def negloglik_optparam(data, basis_function_name, base_density,
                        param_cand, k_folds, print_error, optalgo_params,
-                       batchmc_params, save_dir=None, save_info=False,
-                       batch_mc=True, batch_mc_se=False):
+                       batchmc_params, save_dir=None, save_info=False, batch_mc=True):
+    
     """
     Selects the optimal hyperparameter in the negative log-likelihood density estimation
-    using k-fold cross validation and computes the coefficient vector at this optimal penalty parameter.
+    using k-fold cross validation and computes the coefficient vector at this optimal hyperparameter.
 
     Parameters
     ----------
     data : numpy.ndarray
-        The array of observations whose density function is to be estimated.
+        The array of observations whose probability density function is to be estimated.
 
-
-
-
-
-
-
-
+    basis_function_name : str
+        The type of the basis functions used to estimate the probability density function.
+        Must be one of 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', and 'Sigmoid'.
+        
     base_density : base_density object
         The base density function used to estimate the probability density function.
         __type__ must be 'base_density'.
@@ -708,11 +706,11 @@ def negloglik_optparam(data, basis_function_name, base_density,
 
     optalgo_params : dict
         The dictionary of parameters to control the gradient descent algorithm.
-        Must be returned from the function negloglik_penalized_optalgoparams.
+        Must be returned from the function negloglik_optalgo_params.
 
     batchmc_params : dict
         The dictionary of parameters to control the batch Monte Carlo method
-        to approximate the log-partition function and its gradient.
+        to approximate the partition function and the gradient of the log-partition function.
         Must be returned from the function batch_montecarlo_params.
 
     save_dir : str, optional
@@ -721,28 +719,26 @@ def negloglik_optparam(data, basis_function_name, base_density,
 
     save_info : bool, optional
         Whether to save the estimation information, including the values of negative log-likelihood
-        loss function of each fold and the coefficient vector at the optimal penalty parameter, to a local file;
+        loss function of each fold and the coefficient vector at the optimal hyperparameter, to a local file;
         default is False.
 
     batch_mc : bool, optional
         Whether to use the batch Monte Carlo method with the termination criterion
         being the relative difference of two consecutive approximations; default is True.
-
-    batch_mc_se : bool, optional
-        Whether to use the batch Monte Carlo method with the termination criterion
-        being the standard deviation of approximations; default is False.
-
+        If it is False, the batch Monte Carlo method with the termination criterion
+        being the standard deviation of the approximations will be used.
+        
     Returns
     -------
     dict
         A dictionary containing opt_param, the optimal hyperparameter, and
-        opt_coef, the coefficient vector at the optimal penalty parameter.
+        opt_coef, the coefficient vector at the optimal hyperparameter.
 
     """
     
     check_basedensity(base_density)
     
-    if basis_function_name not in ['Polynomial', 'Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', 'Sigmoid']:
+    if basis_function_name not in ['Gaussian', 'RationalQuadratic', 'Logistic', 'Triweight', 'Sigmoid']:
         raise NotImplementedError(f"The basis function is {basis_function_name}, which has not been implemented.")
     
     if len(data.shape) == 1:
@@ -753,20 +749,20 @@ def negloglik_optparam(data, basis_function_name, base_density,
     N, d = data.shape
     
     # check the validity of param_cand
-    if basis_function_name == 'Polynomial':
-        
-        param_cand_int = np.array(param_cand).flatten()
-        if param_cand_int.dtype != int:
-            raise ValueError("For the polynomial basis function, the param_cand should only contain integers.")
-        if np.any(param_cand_int < 0):
-            raise ValueError("There exists at least one element in param_cand whose value is negative. Please modify.")
-    
-    else:
-        
-        param_cand = np.array(param_cand).flatten()
-        if np.any(param_cand < 0.):
-            raise ValueError("There exists at least one element in param_cand whose value is negative. Please modify.")
-    
+    # if basis_function_name == 'Polynomial':
+    #
+    #     param_cand_int = np.array(param_cand).flatten()
+    #     if param_cand_int.dtype != int:
+    #         raise ValueError("For the polynomial basis function, the param_cand should only contain integers.")
+    #     if np.any(param_cand_int < 0):
+    #         raise ValueError("There exists at least one element in param_cand whose value is negative. Please modify.")
+    #
+    # else:
+    #
+    param_cand = np.array(param_cand).flatten()
+    if np.any(param_cand < 0.):
+        raise ValueError("There exists at least one element in param_cand whose value is negative. Please modify.")
+
     n_param = len(param_cand)
     
     # check the step size
@@ -808,16 +804,10 @@ def negloglik_optparam(data, basis_function_name, base_density,
         
         for i in range(k_folds):
             # data split
-            train_data = data[folds_i != i,]
-            test_data = data[folds_i == i,]
+            train_data = data[folds_i != i, ]
+            test_data = data[folds_i == i, ]
             
-            if basis_function_name == 'Polynomial':
-                
-                basis_function_sub = PolynomialBasisFunction(
-                    landmarks=train_data,
-                    degree=current_param)
-            
-            elif basis_function_name == 'Gaussian':
+            if basis_function_name == 'Gaussian':
                 
                 basis_function_sub = GaussianBasisFunction(
                     landmarks=train_data,
@@ -848,7 +838,7 @@ def negloglik_optparam(data, basis_function_name, base_density,
                     bw=current_param)
             
             # compute the coefficient vector for the given hyperparameter
-            train_algo_control = negloglik_optalgoparams(
+            train_algo_control = negloglik_optalgo_params(
                 start_pt=np.zeros((train_data.shape[0], 1), dtype=np.float64),
                 step_size=float(step_size[j]),
                 max_iter=optalgo_params["max_iter"],
@@ -861,8 +851,7 @@ def negloglik_optparam(data, basis_function_name, base_density,
                 optalgo_params=train_algo_control,
                 batchmc_params=batchmc_params,
                 batch_mc=batch_mc,
-                batch_mc_se=batch_mc_se,
-                print_error=True)
+                print_error=print_error)
             
             score += evaluate_negloglik_loss(
                 data=train_data,
@@ -871,9 +860,9 @@ def negloglik_optparam(data, basis_function_name, base_density,
                 base_density=base_density,
                 coef=coef,
                 batchmc_params=batchmc_params,
-                batch_mc=batch_mc, batch_mc_se=batch_mc_se)
+                batch_mc=batch_mc)
         
-        nll_scores[j,] = score / k_folds
+        nll_scores[j, ] = score / k_folds
         if save_info:
             f_log.write('score: %.8f\n' % nll_scores[j,])
     
@@ -893,13 +882,7 @@ def negloglik_optparam(data, basis_function_name, base_density,
     optalgo_params['step_size'] = float(step_size[np.argmin(nll_scores)])
     
     # form the basis function
-    if basis_function_name == 'Polynomial':
-        
-        basis_function = PolynomialBasisFunction(
-            landmarks=data,
-            degree=opt_param)
-    
-    elif basis_function_name == 'Gaussian':
+    if basis_function_name == 'Gaussian':
         
         basis_function = GaussianBasisFunction(
             landmarks=data,
@@ -936,7 +919,6 @@ def negloglik_optparam(data, basis_function_name, base_density,
         optalgo_params=optalgo_params,
         batchmc_params=batchmc_params,
         batch_mc=batch_mc,
-        batch_mc_se=batch_mc_se,
         print_error=True)
     
     if save_info:
