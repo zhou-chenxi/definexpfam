@@ -4,6 +4,7 @@ from definexpfam.basis_function import *
 from definexpfam.base_density import *
 from definexpfam.negloglik_finexpfam import negloglik_finexpfam_grad_logpar_batchmc
 
+
 class ContamSMFinExpFam:
 	
 	"""
